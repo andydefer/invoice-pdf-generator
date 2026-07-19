@@ -71,7 +71,6 @@ export class PDFGenerator {
                 pdf.addImage(imgData, 'JPEG', margin, yOffset, imgWidth, imgHeight);
             }
 
-            // Retourner le PDF en ArrayBuffer
             return pdf.output('arraybuffer');
 
         } catch (error) {
@@ -93,7 +92,6 @@ export class PDFGenerator {
             quality = 0.8
         } = options;
 
-        // Générer chaque page individuellement et stocker les ArrayBuffers
         const pdfBuffers: ArrayBuffer[] = [];
 
         for (const element of elements) {
@@ -108,12 +106,10 @@ export class PDFGenerator {
             pdfBuffers.push(buffer);
         }
 
-        // Si une seule page, la retourner directement
         if (pdfBuffers.length === 1) {
             return pdfBuffers[0];
         }
 
-        // Fusionner tous les PDFs en un seul
         return await this.mergePDFs(pdfBuffers);
     }
 
@@ -127,7 +123,8 @@ export class PDFGenerator {
                 pages.forEach((page) => mergedPdf.addPage(page));
             }
 
-            return await mergedPdf.save();
+            const uint8Array = await mergedPdf.save();
+            return uint8Array.buffer as ArrayBuffer;
         } catch (error) {
             throw new Error(`PDF merge failed: ${error}`);
         }
@@ -185,8 +182,6 @@ export class PDFGenerator {
         } = options;
 
         const buffer = await this.generateMultiplePages(elements, options);
-
-        // Créer un blob et télécharger
         const blob = new Blob([buffer], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
