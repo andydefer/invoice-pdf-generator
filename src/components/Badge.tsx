@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 
 export interface BadgeProps {
     children: ReactNode;
@@ -6,6 +6,7 @@ export interface BadgeProps {
     size?: 'sm' | 'md' | 'lg';
     rounded?: boolean;
     className?: string;
+    style?: CSSProperties;
 }
 
 export function Badge({
@@ -14,6 +15,7 @@ export function Badge({
     size = 'md',
     rounded = true,
     className = '',
+    style = {},
 }: BadgeProps) {
     const variantClass = {
         success: 'bg-green-100 text-green-800',
@@ -32,7 +34,10 @@ export function Badge({
     const roundedClass = rounded ? 'rounded-full' : 'rounded';
 
     return (
-        <span className={`inline-block ${variantClass} ${sizeClass} ${roundedClass} ${className}`}>
+        <span
+            className={`inline-block ${variantClass} ${sizeClass} ${roundedClass} ${className}`}
+            style={style}
+        >
             {children}
         </span>
     );

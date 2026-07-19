@@ -1,9 +1,15 @@
 import { default as jsPDF } from 'jspdf';
-import { PDFOptions } from '../types';
 
+export interface PDFOptions {
+    filename?: string;
+    scale?: number;
+    backgroundColor?: string;
+    margin?: number;
+    format?: 'a4' | 'a3' | 'letter' | 'legal' | number[];
+    orientation?: 'portrait' | 'landscape';
+}
 export declare class PDFGenerator {
-    private container;
-    generate(htmlContent: string, options?: PDFOptions): Promise<jsPDF>;
+    generatePage(element: HTMLElement, options?: PDFOptions): Promise<jsPDF>;
+    generateMultiplePages(elements: HTMLElement[], options?: PDFOptions): Promise<jsPDF>;
     toBase64(htmlContent: string, options?: PDFOptions): Promise<string>;
-    private cleanup;
 }

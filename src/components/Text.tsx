@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 
 export interface TextProps {
     children: ReactNode;
@@ -8,6 +8,7 @@ export interface TextProps {
     bold?: boolean;
     truncate?: boolean;
     className?: string;
+    style?: CSSProperties;
 }
 
 export function Text({
@@ -18,6 +19,7 @@ export function Text({
     bold = false,
     truncate = false,
     className = '',
+    style = {},
 }: TextProps) {
     const variantClass = {
         h1: 'text-4xl font-bold',
@@ -51,6 +53,7 @@ export function Text({
     return (
         <div
             className={`${variantClass} ${colorClass} ${alignClass} ${boldClass} ${truncateClass} ${className}`}
+            style={style}
         >
             {children}
         </div>

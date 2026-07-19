@@ -1,9 +1,11 @@
+import { CSSProperties } from 'react';
 
 export interface DividerProps {
     variant?: 'solid' | 'dashed' | 'dotted';
     size?: number;
     color?: string;
     className?: string;
+    style?: CSSProperties;
 }
 
 export function Divider({
@@ -11,6 +13,7 @@ export function Divider({
     size = 2,
     color = 'gray-300',
     className = '',
+    style = {},
 }: DividerProps) {
     const variantClass = {
         solid: 'border-solid',
@@ -23,6 +26,7 @@ export function Divider({
     return (
         <hr
             className={`border-${size} ${variantClass} ${colorClass} ${className}`}
+            style={style}
         />
     );
 }

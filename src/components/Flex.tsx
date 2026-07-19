@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 
 export interface FlexProps {
     children: ReactNode;
@@ -8,6 +8,7 @@ export interface FlexProps {
     justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
     wrap?: boolean;
     className?: string;
+    style?: CSSProperties;
 }
 
 export function Flex({
@@ -18,6 +19,7 @@ export function Flex({
     justify = 'start',
     wrap = false,
     className = '',
+    style = {},
 }: FlexProps) {
     const gapClass = `gap-${gap}`;
     const alignClass = {
@@ -40,6 +42,7 @@ export function Flex({
     return (
         <div
             className={`flex ${directionClass} ${gapClass} ${alignClass} ${justifyClass} ${wrapClass} ${className}`}
+            style={style}
         >
             {children}
         </div>

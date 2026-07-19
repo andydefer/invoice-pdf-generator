@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 
 export interface BoxProps {
     children: ReactNode;
@@ -8,6 +8,7 @@ export interface BoxProps {
     rounded?: boolean;
     shadow?: 'none' | 'sm' | 'md' | 'lg';
     className?: string;
+    style?: CSSProperties;
 }
 
 export function Box({
@@ -18,6 +19,7 @@ export function Box({
     rounded = false,
     shadow = 'none',
     className = '',
+    style = {},
 }: BoxProps) {
     const paddingClass = `p-${padding}`;
     const marginClass = margin > 0 ? `m-${margin}` : '';
@@ -28,6 +30,7 @@ export function Box({
     return (
         <div
             className={`${paddingClass} ${marginClass} ${borderClass} ${roundedClass} ${shadowClass} ${className}`}
+            style={style}
         >
             {children}
         </div>

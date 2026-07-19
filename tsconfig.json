@@ -23,12 +23,14 @@
         "outDir": "./dist",
         "jsx": "react-jsx",
         "types": [
-            "node"
+            "node",
+            "vite/client"
         ]
     },
     "include": [
         "src/**/*.ts",
-        "src/**/*.tsx"
+        "src/**/*.tsx",
+        "src/**/*.d.ts"
     ],
     "exclude": [
         "node_modules",

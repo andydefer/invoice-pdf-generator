@@ -11,14 +11,12 @@ export interface PDFOptions {
 }
 
 export class PDFGenerator {
-    private container: HTMLDivElement | null = null;
 
-    async generate(
-        htmlContent: string,
+    async generatePage(
+        element: HTMLElement,
         options: PDFOptions = {}
     ): Promise<jsPDF> {
         const {
-            filename = 'document.pdf',
             scale = 2,
             backgroundColor = '#ffffff',
             margin = 10,
@@ -26,54 +24,92 @@ export class PDFGenerator {
             orientation = 'portrait'
         } = options;
 
-        this.container = document.createElement('div');
-        this.container.innerHTML = htmlContent;
-        this.container.style.position = 'absolute';
-        this.container.style.left = '-9999px';
-        this.container.style.top = '0';
-        this.container.style.width = '794px';
-        this.container.style.background = '#ffffff';
-        document.body.appendChild(this.container);
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
+        tempContainer.style.width = '794px';
+        tempContainer.style.background = '#ffffff';
+        tempContainer.style.padding = '40px';
+        tempContainer.appendChild(element.cloneNode(true));
+        document.body.appendChild(tempContainer);
 
         try {
-            const canvas = await html2canvas(this.container, {
-                scale,
-                backgroundColor,
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            const canvas = await html2canvas(tempContainer, {
+                scale: scale,
+                backgroundColor: backgroundColor,
                 logging: false,
                 useCORS: true,
                 allowTaint: true,
+                width: 794,
+                height: tempContainer.scrollHeight,
                 windowWidth: 794,
-                windowHeight: this.container.scrollHeight
+                windowHeight: tempContainer.scrollHeight,
             });
 
-            this.cleanup();
+            document.body.removeChild(tempContainer);
 
             const pdf = new jsPDF({
-                orientation,
+                orientation: orientation,
                 unit: 'mm',
-                format
+                format: format
             });
 
-            const imgData = canvas.toDataURL('image/png');
             const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const usableWidth = pdfWidth - (margin * 2);
+            const usableHeight = pdfHeight - (margin * 2);
 
-            pdf.addImage(
-                imgData,
-                'PNG',
-                margin,
-                margin,
-                pdfWidth - (margin * 2),
-                pdfHeight - (margin * 2)
-            );
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = usableWidth;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-            pdf.save(filename);
+            if (imgHeight > usableHeight) {
+                const ratio = usableHeight / imgHeight;
+                const newWidth = imgWidth * ratio;
+                const xOffset = margin + (usableWidth - newWidth) / 2;
+                pdf.addImage(imgData, 'PNG', xOffset, margin, newWidth, usableHeight);
+            } else {
+                const yOffset = margin + (usableHeight - imgHeight) / 2;
+                pdf.addImage(imgData, 'PNG', margin, yOffset, imgWidth, imgHeight);
+            }
 
             return pdf;
+
         } catch (error) {
-            this.cleanup();
+            document.body.removeChild(tempContainer);
             throw new Error(`PDF generation failed: ${error}`);
         }
+    }
+
+    async generateMultiplePages(
+        elements: HTMLElement[],
+        options: PDFOptions = {}
+    ): Promise<jsPDF[]> {
+        const {
+            scale = 2,
+            margin = 10,
+            backgroundColor = '#ffffff',
+            format = 'a4',
+            orientation = 'portrait'
+        } = options;
+
+        const pdfs: jsPDF[] = [];
+
+        for (let i = 0; i < elements.length; i++) {
+            const pdf = await this.generatePage(elements[i], {
+                format,
+                orientation,
+                scale,
+                margin,
+                backgroundColor,
+            });
+            pdfs.push(pdf);
+        }
+
+        return pdfs;
     }
 
     async toBase64(
@@ -85,38 +121,36 @@ export class PDFGenerator {
             backgroundColor = '#ffffff'
         } = options;
 
-        this.container = document.createElement('div');
-        this.container.innerHTML = htmlContent;
-        this.container.style.position = 'absolute';
-        this.container.style.left = '-9999px';
-        this.container.style.top = '0';
-        this.container.style.width = '794px';
-        this.container.style.background = '#ffffff';
-        document.body.appendChild(this.container);
+        const container = document.createElement('div');
+        container.innerHTML = htmlContent;
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.style.width = '794px';
+        container.style.background = '#ffffff';
+        container.style.padding = '40px';
+        document.body.appendChild(container);
 
         try {
-            const canvas = await html2canvas(this.container, {
-                scale,
-                backgroundColor,
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const canvas = await html2canvas(container, {
+                scale: scale,
+                backgroundColor: backgroundColor,
                 logging: false,
                 useCORS: true,
                 allowTaint: true,
+                width: 794,
+                height: container.scrollHeight,
                 windowWidth: 794,
-                windowHeight: this.container.scrollHeight
+                windowHeight: container.scrollHeight,
             });
 
-            this.cleanup();
+            document.body.removeChild(container);
             return canvas.toDataURL('image/png');
         } catch (error) {
-            this.cleanup();
+            document.body.removeChild(container);
             throw new Error(`Base64 conversion failed: ${error}`);
-        }
-    }
-
-    private cleanup(): void {
-        if (this.container && this.container.parentNode) {
-            document.body.removeChild(this.container);
-            this.container = null;
         }
     }
 }

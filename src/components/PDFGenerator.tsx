@@ -1,4 +1,4 @@
-import { useRef, ReactNode, useImperativeHandle, forwardRef } from 'react';
+import { useRef, ReactNode, useImperativeHandle, forwardRef, CSSProperties } from 'react';
 import { usePDFContext } from '../context';
 import { PDFGenerator as PDFGeneratorClass } from '../utils/pdfGenerator';
 import { PDFGeneratorRef } from '../types/pdf';
@@ -9,7 +9,12 @@ export interface PDFGeneratorProps {
     orientation?: 'portrait' | 'landscape';
     scale?: number;
     margin?: number;
+    border?: boolean;
+    borderColor?: string;
+    borderWidth?: number;
+    borderRadius?: number;
     className?: string;
+    style?: CSSProperties;
     onGenerate?: (base64: string) => void;
     onDownload?: (pdf: any) => void;
 }
@@ -22,7 +27,12 @@ export const PDFGenerator = forwardRef<PDFGeneratorRef, PDFGeneratorProps>(
             orientation = 'portrait',
             scale = 2,
             margin = 40,
+            border = true,
+            borderColor = '#e5e7eb',
+            borderWidth = 2,
+            borderRadius = 12,
             className = '',
+            style = {},
             onGenerate,
             onDownload,
         },
@@ -42,15 +52,36 @@ export const PDFGenerator = forwardRef<PDFGeneratorRef, PDFGeneratorProps>(
                 }
 
                 const generator = new PDFGeneratorClass();
-                const html = container.innerHTML;
 
-                const pdf = await generator.generate(html, {
-                    filename,
-                    format,
-                    orientation,
-                    scale,
-                    margin,
-                });
+                // Récupérer toutes les pages (éléments avec page-break-after: always)
+                const pageElements = container.querySelectorAll('[style*="page-break-after: always"]');
+
+                let pdf: any = null;
+
+                if (pageElements.length > 0) {
+                    // Plusieurs pages
+                    const pages: HTMLElement[] = [];
+                    pageElements.forEach((el) => {
+                        pages.push(el as HTMLElement);
+                    });
+
+                    pdf = await generator.generateMultiplePages(pages, {
+                        filename,
+                        format,
+                        orientation,
+                        scale,
+                        margin: 10,
+                    });
+                } else {
+                    // Une seule page
+                    pdf = await generator.generatePage(container, {
+                        filename,
+                        format,
+                        orientation,
+                        scale,
+                        margin: 10,
+                    });
+                }
 
                 if (onDownload) onDownload(pdf);
                 setLoading(false);
@@ -73,7 +104,7 @@ export const PDFGenerator = forwardRef<PDFGeneratorRef, PDFGeneratorProps>(
                 }
 
                 const generator = new PDFGeneratorClass();
-                const html = container.innerHTML;
+                const html = container.outerHTML;
 
                 const base64 = await generator.toBase64(html, {
                     scale,
@@ -94,13 +125,24 @@ export const PDFGenerator = forwardRef<PDFGeneratorRef, PDFGeneratorProps>(
             generateBase64,
         }));
 
+        const borderStyle = border
+            ? {
+                border: `${borderWidth}px solid ${borderColor}`,
+                borderRadius: `${borderRadius}px`,
+            }
+            : {};
+
         return (
             <div
                 ref={containerRef}
                 className={`pdf-container ${className}`}
                 style={{
                     backgroundColor: '#ffffff',
+                    width: '794px',
                     padding: `${margin}px`,
+                    margin: '0 auto',
+                    ...borderStyle,
+                    ...style,
                 }}
             >
                 {children}

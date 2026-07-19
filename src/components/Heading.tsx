@@ -1,10 +1,11 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, CSSProperties } from 'react';
 
 export interface HeadingProps {
     children: ReactNode;
     level?: 1 | 2 | 3 | 4 | 5 | 6;
     color?: 'primary' | 'secondary' | 'muted';
     className?: string;
+    style?: CSSProperties;
 }
 
 export function Heading({
@@ -12,6 +13,7 @@ export function Heading({
     level = 1,
     color = 'primary',
     className = '',
+    style = {},
 }: HeadingProps) {
     const sizeClass = {
         1: 'text-4xl font-bold',
@@ -32,7 +34,7 @@ export function Heading({
 
     return React.createElement(
         Tag,
-        { className: `${sizeClass} ${colorClass} ${className}` },
+        { className: `${sizeClass} ${colorClass} ${className}`, style },
         children
     );
 }

@@ -1,3 +1,4 @@
+import { CSSProperties } from 'react';
 import { Box } from './Box';
 import { Text } from './Text';
 import { Flex } from './Flex';
@@ -10,6 +11,7 @@ export interface TotalBoxProps {
     total: number;
     currency?: string;
     className?: string;
+    style?: CSSProperties;
 }
 
 export function TotalBox({
@@ -20,11 +22,15 @@ export function TotalBox({
     total,
     currency = '€',
     className = '',
+    style = {},
 }: TotalBoxProps) {
     const taxAmount = (subtotal - discount) * (tax / 100);
 
     return (
-        <Box className={`bg-gray-50 p-4 rounded-lg ${className}`}>
+        <Box
+            className={`bg-gray-50 p-4 rounded-lg ${className}`}
+            style={style}
+        >
             <Flex direction="column" gap={2}>
                 <Flex direction="row" justify="between">
                     <Text variant="body" color="muted">Subtotal</Text>

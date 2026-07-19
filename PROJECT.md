@@ -18,11 +18,11 @@ react-pdf-builder/
 │   │   └── index.ts                  # Export de tous les composants
 │   ├── hooks/
 │   │   ├── usePDF.ts                 # Hook principal
-│   │   └── index.ts                  # Export des hooks
+│   │   └── index.ts   ok               # Export des hooks
 │   ├── types/
-│   │   ├── components.ts             # Types des composants
-│   │   ├── pdf.ts                    # Types PDF
-│   │   └── index.ts                  # Export des types
+│   │   ├── components.ts   ok          # Types des composants
+│   │   ├── pdf.ts    ok                # Types PDF
+│   │   └── index.ts ok                 # Export des types
 │   ├── utils/
 │   │   ├── pdfGenerator.ts ok          # Génération PDF
 │   │   ├── renderer.ts ok              # Rendu HTML

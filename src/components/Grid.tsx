@@ -1,10 +1,11 @@
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 
 export interface GridProps {
     children: ReactNode;
     columns?: number;
     gap?: number;
     className?: string;
+    style?: CSSProperties;
 }
 
 export function Grid({
@@ -12,12 +13,16 @@ export function Grid({
     columns = 2,
     gap = 4,
     className = '',
+    style = {},
 }: GridProps) {
     const gridClass = `grid-cols-${columns}`;
     const gapClass = `gap-${gap}`;
 
     return (
-        <div className={`grid ${gridClass} ${gapClass} ${className}`}>
+        <div
+            className={`grid ${gridClass} ${gapClass} ${className}`}
+            style={style}
+        >
             {children}
         </div>
     );

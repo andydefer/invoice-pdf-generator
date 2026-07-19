@@ -1,45 +1,20 @@
-import { InvoiceData, PDFOptions, TemplateOptions } from './types';
-import { default as jsPDF } from 'jspdf';
 
+export { PDFGenerator } from './components/PDFGenerator';
+export { Flex } from './components/Flex';
+export { Grid } from './components/Grid';
+export { Box } from './components/Box';
+export { Text } from './components/Text';
+export { Heading } from './components/Heading';
+export { Image } from './components/Image';
+export { Table } from './components/Table';
+export { TableRow } from './components/TableRow';
+export { TableCell } from './components/TableCell';
+export { Badge } from './components/Badge';
+export { Divider } from './components/Divider';
+export { TotalBox } from './components/TotalBox';
+export { QRCode } from './components/QRCode';
+export { Barcode } from './components/Barcode';
+export { Page } from './components/Page';
+export { usePDF } from './hooks/usePDF';
+export { PDFProvider, usePDFContext } from './context';
 export * from './types';
-export declare class InvoicePDF {
-    private data;
-    private template;
-    private templateOptions;
-    private generator;
-    constructor(data: InvoiceData);
-    /**
-     * Set the template to use
-     */
-    setTemplate(template: 'stripe' | 'moderne'): this;
-    /**
-     * Set template options (colors, logo, etc.)
-     */
-    setTemplateOptions(options: TemplateOptions): this;
-    /**
-     * Generate the invoice HTML
-     */
-    generateHTML(): string;
-    /**
-     * Download the PDF
-     */
-    download(options?: PDFOptions): Promise<jsPDF>;
-    /**
-     * Preview in an HTML container
-     */
-    preview(containerId: string): this;
-    /**
-     * Export as base64
-     */
-    toBase64(options?: PDFOptions): Promise<string>;
-    /**
-     * Get current invoice data
-     */
-    getData(): InvoiceData;
-    /**
-     * Update invoice data
-     */
-    setData(data: Partial<InvoiceData>): this;
-}
-export { stripeTemplate } from './templates/stripe';
-export { PDFGenerator } from './utils/pdfGenerator';

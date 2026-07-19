@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 export interface ImageProps {
     src: string;
@@ -9,6 +9,7 @@ export interface ImageProps {
     rounded?: boolean | 'full';
     fallback?: string;
     className?: string;
+    style?: CSSProperties;
 }
 
 export function Image({
@@ -20,6 +21,7 @@ export function Image({
     rounded = false,
     fallback,
     className = '',
+    style = {},
 }: ImageProps) {
     const fitClass = {
         contain: 'object-contain',
@@ -47,6 +49,7 @@ export function Image({
             width={width}
             height={height}
             className={`${fitClass} ${roundedClass} ${className}`}
+            style={style}
             onError={handleError}
         />
     );
