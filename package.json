@@ -1,6 +1,6 @@
 {
     "name": "@andy-defer/react-pdf-builder",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Build PDF documents with React and Tailwind CSS",
     "type": "module",
     "main": "./dist/index.umd.js",
