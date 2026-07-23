@@ -67,7 +67,7 @@
         color: hsl(var(--muted-foreground));
     }
 
-    .text-danger {
+    .text-destructive {
         color: hsl(var(--destructive));
     }
 

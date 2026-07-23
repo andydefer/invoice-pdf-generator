@@ -17,7 +17,6 @@
 - [Démarrage rapide](#démarrage-rapide)
 - [Téléchargement du PDF](#téléchargement-du-pdf)
 - [Composants](#composants)
-  - [PDFGenerator](#pdfgenerator)
   - [Page](#page)
   - [Flex](#flex)
   - [Grid](#grid)
@@ -34,7 +33,7 @@
   - [QRCode](#qrcode)
   - [Barcode](#barcode)
 - [Hooks](#hooks)
-  - [usePDF](#usepdf)
+  - [usePdf](#usepdf)
 - [API Référence](#api-référence)
 - [Exemples](#exemples)
 - [Performance](#performance)
@@ -131,45 +130,28 @@ import '@andy-defer/react-pdf-builder/dist/style.css';
 ```tsx
 import React from 'react';
 import { 
-  PDFGenerator, 
   Page, 
   Flex, 
   Text, 
-  usePDF, 
-  PDFProvider 
+  usePdf,
 } from '@andy-defer/react-pdf-builder';
 
 function MyDocument() {
-  const { download, loading } = usePDF();
-
-  const handleDownload = async () => {
-    const container = document.querySelector('.pdf-container') as HTMLElement;
-    if (container) {
-      await download(container, {
-        filename: 'mon-document.pdf',
-        format: 'a4',
-        orientation: 'portrait',
-        scale: 2,
-      });
-    }
-  };
+  const { download, loading } = usePdf(
+    <Page>
+      <Flex direction="column" gap={4}>
+        <Text variant="h1">Mon Document</Text>
+        <Text>Ceci est un document PDF généré avec React.</Text>
+      </Flex>
+    </Page>
+  );
 
   return (
     <div>
-      <PDFGenerator format="a4">
-        <Page>
-          <Flex direction="column" gap={4}>
-            <Text variant="h1">Mon Document</Text>
-            <Text>Ceci est un document PDF généré avec React.</Text>
-          </Flex>
-        </Page>
-      </PDFGenerator>
-
       <button 
-        onClick={handleDownload}
+        onClick={() => download({ filename: 'mon-document.pdf' })}
         disabled={loading}
         style={{
-          marginTop: '16px',
           padding: '10px 24px',
           background: loading ? '#6b7280' : '#4338ca',
           color: 'white',
@@ -185,13 +167,7 @@ function MyDocument() {
   );
 }
 
-export default function App() {
-  return (
-    <PDFProvider>
-      <MyDocument />
-    </PDFProvider>
-  );
-}
+export default MyDocument;
 ```
 
 ---
@@ -201,88 +177,103 @@ export default function App() {
 ### Méthode 1 : Téléchargement simple avec `download()`
 
 ```tsx
-import { usePDF } from '@andy-defer/react-pdf-builder';
+import { usePdf } from '@andy-defer/react-pdf-builder';
 
 function MyComponent() {
-  const { download, loading } = usePDF();
-
-  const handleDownload = async () => {
-    const container = document.querySelector('.pdf-container') as HTMLElement;
-    
-    if (container) {
-      await download(container, {
-        filename: 'facture.pdf',
-        format: 'a4',
-        orientation: 'portrait',
-        scale: 2,
-        quality: 0.9,
-      });
-    }
-  };
+  const { download, loading } = usePdf(
+    <Invoice data={invoiceData} />
+  );
 
   return (
-    <button onClick={handleDownload} disabled={loading}>
+    <button 
+      onClick={() => download({ filename: 'facture.pdf' })}
+      disabled={loading}
+    >
       {loading ? 'Génération...' : 'Télécharger PDF'}
     </button>
   );
 }
 ```
 
-### Méthode 2 : Téléchargement multi-pages
+### Méthode 2 : Téléchargement avec configuration personnalisée
 
 ```tsx
-import { usePDF } from '@andy-defer/react-pdf-builder';
+import { usePdf } from '@andy-defer/react-pdf-builder';
 
-function MultiPageComponent() {
-  const { download, loading } = usePDF();
+function MyComponent() {
+  const { download, loading } = usePdf(<Report data={reportData} />);
 
   const handleDownload = async () => {
-    const container = document.querySelector('.pdf-container') as HTMLElement;
-    
-    if (container) {
-      await download(container, {
-        filename: 'document-complet.pdf',
-        format: 'a4',
-        scale: 1.5,
-        quality: 0.8,
-      });
-    }
+    await download({
+      filename: 'rapport-2026.pdf',
+      format: 'a4',
+      orientation: 'landscape',
+      scale: 2,
+      quality: 0.95,
+      margin: 15,
+    });
   };
 
   return (
-    <PDFGenerator format="a4">
-      <Page>Page 1</Page>
-      <Page>Page 2</Page>
-    </PDFGenerator>
+    <button onClick={handleDownload} disabled={loading}>
+      {loading ? 'Génération...' : '📥 Télécharger'}
+    </button>
   );
 }
 ```
 
-### Méthode 3 : Téléchargement avec gestion d'erreur
+### Méthode 3 : Génération base64 pour prévisualisation
 
 ```tsx
-import { usePDF } from '@andy-defer/react-pdf-builder';
+import { usePdf } from '@andy-defer/react-pdf-builder';
 import { useState } from 'react';
 
 function MyComponent() {
-  const { download, loading, error } = usePDF();
+  const [pdfPreview, setPdfPreview] = useState<string | null>(null);
+  const { generate, loading } = usePdf(<Document content={data} />);
+
+  const handlePreview = async () => {
+    const base64 = await generate({
+      format: 'a4',
+      scale: 1.5,
+      quality: 0.8,
+    });
+    setPdfPreview(base64);
+  };
+
+  return (
+    <div>
+      <button onClick={handlePreview} disabled={loading}>
+        {loading ? 'Génération...' : 'Aperçu'}
+      </button>
+      {pdfPreview && (
+        <iframe
+          src={pdfPreview}
+          style={{ width: '100%', height: '600px', border: '1px solid #e5e7eb' }}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+### Méthode 4 : Gestion d'erreur et état de chargement
+
+```tsx
+import { usePdf } from '@andy-defer/react-pdf-builder';
+import { useState } from 'react';
+
+function MyComponent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { download, loading, error } = usePdf(<MyDocument />);
 
   const handleDownload = async () => {
     try {
       setErrorMessage(null);
-      const container = document.querySelector('.pdf-container') as HTMLElement;
-      
-      if (!container) {
-        setErrorMessage('Conteneur du document non trouvé');
-        return;
-      }
-
-      await download(container, {
+      await download({
         filename: 'document.pdf',
         format: 'a4',
         scale: 2,
-        quality: 0.9,
       });
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -291,9 +282,9 @@ function MyComponent() {
 
   return (
     <div>
-      {errorMessage && (
+      {error && (
         <div style={{ color: 'red', marginBottom: '12px' }}>
-          ❌ {errorMessage}
+          ❌ {error}
         </div>
       )}
       <button onClick={handleDownload} disabled={loading}>
@@ -304,47 +295,36 @@ function MyComponent() {
 }
 ```
 
-### Méthode 4 : Bouton de téléchargement stylé avec Tailwind
+### Méthode 5 : Bouton stylé avec Tailwind et animation
 
 ```tsx
-import { usePDF } from '@andy-defer/react-pdf-builder';
+import { usePdf } from '@andy-defer/react-pdf-builder';
 
 function MyComponent() {
-  const { download, loading } = usePDF();
-
-  const handleDownload = async () => {
-    const container = document.querySelector('.pdf-container') as HTMLElement;
-    if (container) {
-      await download(container, {
-        filename: 'facture.pdf',
-        format: 'a4',
-        scale: 2,
-        quality: 0.9,
-      });
-    }
-  };
+  const { download, loading } = usePdf(<Invoice data={invoiceData} />);
 
   return (
     <button
-      onClick={handleDownload}
+      onClick={() => download({ filename: 'facture.pdf' })}
       disabled={loading}
       className={`
-        mt-4 px-6 py-3 rounded-lg font-bold text-white transition-all
+        px-6 py-3 rounded-lg font-bold text-white transition-all
+        flex items-center gap-2
         ${loading 
           ? 'bg-gray-400 cursor-not-allowed' 
-          : 'bg-green-600 hover:bg-green-700 hover:shadow-lg active:transform active:scale-95'
+          : 'bg-green-600 hover:bg-green-700 hover:shadow-lg active:scale-95'
         }
       `}
     >
       {loading ? (
-        <span className="flex items-center gap-2">
+        <>
           <span className="animate-spin">⏳</span>
           Génération en cours...
-        </span>
+        </>
       ) : (
-        <span className="flex items-center gap-2">
+        <>
           📥 Télécharger le PDF
-        </span>
+        </>
       )}
     </button>
   );
@@ -355,44 +335,6 @@ function MyComponent() {
 
 ## Composants
 
-### PDFGenerator
-
-Composant conteneur principal qui encapsule le document à générer.
-
-```tsx
-import { PDFGenerator } from '@andy-defer/react-pdf-builder';
-
-<PDFGenerator
-  format="a4"                    // 'a4' | 'a3' | 'letter' | 'legal'
-  orientation="portrait"          // 'portrait' | 'landscape'
-  scale={2}                      // Qualité du rendu (1-3)
-  margin={40}                    // Marge en pixels
-  border={true}                  // Bordure autour du document
-  borderColor="#e5e7eb"          // Couleur de la bordure
-  borderWidth={2}                // Épaisseur de la bordure
-  borderRadius={12}              // Rayon des coins
-  className="bg-white"           // Classes CSS additionnelles
-  style={{}}                     // Styles inline additionnels
->
-  {/* Contenu du document */}
-</PDFGenerator>
-```
-
-| Prop | Type | Défaut | Description |
-|------|------|--------|-------------|
-| `format` | `'a4' \| 'a3' \| 'letter' \| 'legal'` | `'a4'` | Format du papier |
-| `orientation` | `'portrait' \| 'landscape'` | `'portrait'` | Orientation |
-| `scale` | `number` | `2` | Qualité du rendu |
-| `margin` | `number` | `40` | Marge en pixels |
-| `border` | `boolean` | `true` | Ajouter une bordure |
-| `borderColor` | `string` | `'#e5e7eb'` | Couleur de la bordure |
-| `borderWidth` | `number` | `2` | Épaisseur de la bordure |
-| `borderRadius` | `number` | `12` | Rayon des coins |
-| `className` | `string` | `''` | Classes CSS additionnelles |
-| `style` | `CSSProperties` | `{}` | Styles inline additionnels |
-
----
-
 ### Page
 
 Composant représentant une page individuelle dans un document multi-pages.
@@ -400,7 +342,11 @@ Composant représentant une page individuelle dans un document multi-pages.
 ```tsx
 import { Page } from '@andy-defer/react-pdf-builder';
 
-<Page id="page-1" className="" style={{}}>
+<Page
+  data-page-id="page-1"  // Identifiant pour la détection automatique
+  className="p-8"
+  style={{}}
+>
   {/* Contenu de la page */}
 </Page>
 ```
@@ -408,11 +354,11 @@ import { Page } from '@andy-defer/react-pdf-builder';
 | Prop | Type | Défaut | Description |
 |------|------|--------|-------------|
 | `children` | `ReactNode` | - | Contenu de la page |
-| `id` | `string` | `auto-généré` | Identifiant unique |
+| `data-page-id` | `string` | `auto-généré` | Identifiant unique pour la détection |
 | `className` | `string` | `''` | Classes CSS additionnelles |
 | `style` | `CSSProperties` | `{}` | Styles inline additionnels |
 
-**Important :** Chaque `Page` est automatiquement détectée et transformée en une page PDF distincte.
+**Important :** Chaque `Page` est automatiquement détectée via l'attribut `data-page-id` et transformée en une page PDF distincte.
 
 ---
 
@@ -519,8 +465,8 @@ Composant de texte avec variantes de style.
 import { Text } from '@andy-defer/react-pdf-builder';
 
 <Text
-  variant="body"                 // 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'body' | 'small'
-  color="primary"                // 'primary' | 'secondary' | 'muted' | 'danger' | 'success' | 'warning'
+  variant="body"                 // 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'body' | 'small' | 'caption'
+  color="primary"                // 'primary' | 'secondary' | 'muted' | 'destructive' | 'success' | 'warning'
   align="left"                   // 'left' | 'center' | 'right' | 'justify'
   bold={false}                   // Texte en gras
   truncate={false}               // Tronquer le texte
@@ -534,8 +480,8 @@ import { Text } from '@andy-defer/react-pdf-builder';
 | Prop | Type | Défaut | Description |
 |------|------|--------|-------------|
 | `children` | `ReactNode` | - | Contenu du texte |
-| `variant` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'body' \| 'small'` | `'body'` | Style typographique |
-| `color` | `'primary' \| 'secondary' \| 'muted' \| 'danger' \| 'success' \| 'warning'` | `'primary'` | Couleur du texte |
+| `variant` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'body' \| 'small' \| 'caption'` | `'body'` | Style typographique |
+| `color` | `'primary' \| 'secondary' \| 'muted' \| 'destructive' \| 'success' \| 'warning'` | `'primary'` | Couleur du texte |
 | `align` | `'left' \| 'center' \| 'right' \| 'justify'` | `'left'` | Alignement |
 | `bold` | `boolean` | `false` | Texte en gras |
 | `truncate` | `boolean` | `false` | Tronquer le texte |
@@ -704,7 +650,7 @@ Composant d'étiquette visuelle.
 import { Badge } from '@andy-defer/react-pdf-builder';
 
 <Badge
-  variant="success"              // 'success' | 'warning' | 'danger' | 'info' | 'default'
+  variant="success"              // 'success' | 'warning' | 'destructive' | 'info' | 'default'
   size="md"                      // 'sm' | 'md' | 'lg'
   rounded={true}                 // Coins arrondis complets
   className=""
@@ -717,7 +663,7 @@ import { Badge } from '@andy-defer/react-pdf-builder';
 | Prop | Type | Défaut | Description |
 |------|------|--------|-------------|
 | `children` | `ReactNode` | - | Contenu du badge |
-| `variant` | `'success' \| 'warning' \| 'danger' \| 'info' \| 'default'` | `'default'` | Couleur du badge |
+| `variant` | `'success' \| 'warning' \| 'destructive' \| 'info' \| 'default'` | `'default'` | Couleur du badge |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Taille du badge |
 | `rounded` | `boolean` | `true` | Coins arrondis complets |
 | `className` | `string` | `''` | Classes CSS additionnelles |
@@ -870,59 +816,64 @@ import { Barcode } from '@andy-defer/react-pdf-builder';
 
 ## Hooks
 
-### usePDF
+### usePdf
 
-Hook principal pour la génération de PDF.
+Hook principal pour la génération de PDF. Contrairement à l'ancienne API, ce hook prend directement un composant React en paramètre.
 
 ```tsx
-import { usePDF } from '@andy-defer/react-pdf-builder';
+import { usePdf } from '@andy-defer/react-pdf-builder';
 
 const {
-  generate,                      // Génère un PDF en base64
-  download,                      // Télécharge un PDF
-  preview,                       // Prévisualise un élément
-  updateConfig,                  // Met à jour la configuration
-  config,                        // Configuration actuelle
+  download,                      // Télécharge le PDF
+  generate,                      // Génère le PDF en base64
   loading,                       // État de chargement
   error,                         // Message d'erreur
-  setError,                      // Réinitialise l'erreur
-} = usePDF();
+  config,                        // Configuration actuelle
+  updateConfig,                  // Met à jour la configuration
+  cleanup,                       // Nettoie le conteneur DOM
+} = usePdf(<MyDocument />);
 ```
 
-#### `generate(element: HTMLElement, options?: Partial<PDFOptions>): Promise<string>`
+#### `download(options?: Partial<PDFOptions>): Promise<void>`
 
-Génère une représentation base64 d'un élément HTML.
+Télécharge le document sous forme de PDF.
 
 ```tsx
-const base64 = await generate(element, {
+await download({
+  filename: 'document.pdf',
+  format: 'a4',
+  orientation: 'portrait',
+  scale: 2,
+  quality: 0.9,
+  margin: 15,
+});
+```
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `filename` | `string` | `'document.pdf'` | Nom du fichier PDF |
+| `format` | `'a4' \| 'a3' \| 'letter' \| 'legal'` | `'a3'` | Format du papier |
+| `orientation` | `'portrait' \| 'landscape'` | `'portrait'` | Orientation |
+| `scale` | `number` | `1.5` | Qualité du rendu (1-3) |
+| `quality` | `number` | `0.8` | Qualité JPEG (0.1-1.0) |
+| `margin` | `number` | `20` | Marge en mm |
+| `backgroundColor` | `string` | `'#ffffff'` | Couleur de fond |
+| `containerWidth` | `number` | `900` | Largeur du conteneur |
+| `containerPadding` | `number` | `10` | Padding du conteneur |
+| `containerBackground` | `string` | `'#ffffff'` | Fond du conteneur |
+
+#### `generate(options?: Partial<PDFOptions>): Promise<string>`
+
+Génère une représentation base64 du document.
+
+```tsx
+const base64 = await generate({
   scale: 2,
   quality: 0.9,
 });
 ```
 
-#### `download(elements: HTMLElement | HTMLElement[], options?: Partial<PDFOptions>): Promise<void>`
-
-Télécharge un ou plusieurs éléments sous forme de PDF.
-
-```tsx
-const container = document.querySelector('.pdf-container') as HTMLElement;
-await download(container, {
-  filename: 'document.pdf',
-  format: 'a4',
-  orientation: 'portrait',
-  scale: 2,
-});
-```
-
-#### `preview(element: HTMLElement, containerId: string): void`
-
-Affiche un aperçu d'un élément dans un conteneur.
-
-```tsx
-preview(element, 'preview-container');
-```
-
-#### `updateConfig(newConfig: Partial<typeof config>): void`
+#### `updateConfig(newConfig: Partial<PdfConfig>): void`
 
 Met à jour la configuration globale.
 
@@ -930,8 +881,19 @@ Met à jour la configuration globale.
 updateConfig({ 
   format: 'a4', 
   orientation: 'landscape', 
-  scale: 2 
+  scale: 2,
+  margin: 20,
 });
+```
+
+#### `cleanup(): void`
+
+Nettoie le conteneur DOM et le root React pour libérer la mémoire.
+
+```tsx
+useEffect(() => {
+  return () => cleanup();
+}, [cleanup]);
 ```
 
 ---
@@ -945,10 +907,29 @@ updateConfig({
 | `filename` | `string` | `'document.pdf'` | Nom du fichier PDF |
 | `scale` | `number` | `1.5` | Qualité du rendu (1-3) |
 | `quality` | `number` | `0.8` | Qualité JPEG (0.1-1.0) |
-| `format` | `'a4' \| 'a3' \| 'letter' \| 'legal'` | `'a4'` | Format du papier |
+| `format` | `'a4' \| 'a3' \| 'letter' \| 'legal'` | `'a3'` | Format du papier |
 | `orientation` | `'portrait' \| 'landscape'` | `'portrait'` | Orientation |
-| `margin` | `number` | `10` | Marge en mm |
+| `margin` | `number` | `20` | Marge en mm |
 | `backgroundColor` | `string` | `'#ffffff'` | Couleur de fond |
+| `containerWidth` | `number` | `900` | Largeur du conteneur (px) |
+| `containerPadding` | `number` | `10` | Padding du conteneur (px) |
+| `containerBackground` | `string` | `'#ffffff'` | Couleur de fond du conteneur |
+
+### PdfConfig
+
+Configuration du hook usePdf.
+
+```typescript
+interface PdfConfig {
+  format: 'a3' | 'a4' | 'letter' | 'legal';
+  orientation: 'portrait' | 'landscape';
+  scale: number;
+  margin: number;
+  containerWidth: number;
+  containerPadding: number;
+  containerBackground: string;
+}
+```
 
 ---
 
@@ -959,7 +940,6 @@ updateConfig({
 ```tsx
 import React from 'react';
 import {
-  PDFGenerator,
   Page,
   Flex,
   Grid,
@@ -972,154 +952,149 @@ import {
   TotalBox,
   QRCode,
   Barcode,
-  usePDF,
-  PDFProvider,
+  usePdf,
 } from '@andy-defer/react-pdf-builder';
 
 function CompleteInvoice() {
-  const { download, loading } = usePDF();
-
-  const items = [
-    { description: 'Développement site e-commerce', quantity: 1, unitPrice: 850, total: 850 },
-    { description: 'Intégration système de paiement', quantity: 1, unitPrice: 350, total: 350 },
-    { description: 'Hébergement premium (1 an)', quantity: 12, unitPrice: 25, total: 300 },
-  ];
-
-  const subtotal = 1500;
-  const discount = 50;
-  const tax = 20;
-  const total = 1740;
-
-  const handleDownload = async () => {
-    const container = document.querySelector('.pdf-container') as HTMLElement;
-    if (container) {
-      await download(container, {
-        filename: 'facture_INV-2026-001.pdf',
-        format: 'a4',
-        orientation: 'portrait',
-        scale: 2,
-        quality: 0.9,
-      });
-    }
+  const invoiceData = {
+    number: 'INV-2026-001',
+    date: '19/07/2026',
+    dueDate: '18/08/2026',
+    customer: {
+      name: 'Jean Dupont',
+      address: '45 Rue du Commerce',
+      city: '69000 Lyon',
+    },
+    items: [
+      { description: 'Développement site e-commerce', quantity: 1, unitPrice: 850, total: 850 },
+      { description: 'Intégration système de paiement', quantity: 1, unitPrice: 350, total: 350 },
+      { description: 'Hébergement premium (1 an)', quantity: 12, unitPrice: 25, total: 300 },
+    ],
+    subtotal: 1500,
+    discount: 50,
+    tax: 20,
+    total: 1740,
   };
+
+  const { download, loading, error } = usePdf(
+    <Page className="p-8">
+      <Box>
+        {/* En-tête */}
+        <Flex justify="between" align="center">
+          <Box>
+            <Heading level={1}>FACTURE</Heading>
+            <Text color="muted">#{invoiceData.number}</Text>
+          </Box>
+          <Box style={{ textAlign: 'right' }}>
+            <Text variant="body" className="font-bold">WebStudio Pro</Text>
+            <Text variant="small" color="muted">123 Avenue des Créateurs</Text>
+            <Text variant="small" color="muted">75000 Paris</Text>
+          </Box>
+        </Flex>
+
+        <Divider />
+
+        {/* Informations client */}
+        <Grid columns={2} gap={4}>
+          <Box className="bg-gray-50 p-4 rounded">
+            <Text variant="small" color="muted">DESTINATAIRE</Text>
+            <Text className="font-bold">{invoiceData.customer.name}</Text>
+            <Text>{invoiceData.customer.address}</Text>
+            <Text>{invoiceData.customer.city}</Text>
+          </Box>
+          <Box className="bg-gray-50 p-4 rounded">
+            <Text variant="small" color="muted">DÉTAILS</Text>
+            <Text>Date: {invoiceData.date}</Text>
+            <Text>Échéance: {invoiceData.dueDate}</Text>
+            <Badge variant="warning">En attente</Badge>
+          </Box>
+        </Grid>
+
+        {/* Tableau des articles */}
+        <Table
+          columns={[
+            { key: 'description', label: 'Description', width: '50%' },
+            { key: 'quantity', label: 'Qté', align: 'center' },
+            { key: 'unitPrice', label: 'Prix unit.', align: 'right' },
+            { key: 'total', label: 'Total', align: 'right' },
+          ]}
+          data={invoiceData.items}
+          bordered
+          striped
+        />
+
+        {/* Totaux */}
+        <Flex justify="end">
+          <TotalBox
+            subtotal={invoiceData.subtotal}
+            discount={invoiceData.discount}
+            tax={invoiceData.tax}
+            total={invoiceData.total}
+          />
+        </Flex>
+
+        <Divider />
+
+        {/* Pied de page */}
+        <Flex justify="between">
+          <Box>
+            <Text variant="small" color="muted">
+              <strong>Conditions de paiement :</strong> 30 jours nets
+            </Text>
+            <Text variant="small" color="muted">
+              <strong>IBAN :</strong> FR76 1234 5678 9012 3456 7890 123
+            </Text>
+          </Box>
+          <Flex gap={4}>
+            <QRCode value={`https://example.com/invoice/${invoiceData.number}`} size={80} />
+            <Barcode value={invoiceData.number} format="CODE128" height={60} />
+          </Flex>
+        </Flex>
+      </Box>
+    </Page>
+  );
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-      <PDFGenerator format="a4" border>
-        <Page>
-          <Box>
-            <Flex justify="between" align="center">
-              <Box>
-                <Heading level={1}>FACTURE</Heading>
-                <Text color="muted">#INV-2026-001</Text>
-              </Box>
-              <Box>
-                <Text variant="body" className="font-bold">WebStudio Pro</Text>
-                <Text variant="small" color="muted">123 Avenue des Créateurs</Text>
-                <Text variant="small" color="muted">75000 Paris</Text>
-              </Box>
-            </Flex>
+      {error && (
+        <div style={{ color: '#dc2626', padding: '12px', background: '#fee2e2', borderRadius: '8px', marginBottom: '16px' }}>
+          ❌ {error}
+        </div>
+      )}
 
-            <Divider />
-
-            <Grid columns={2} gap={4}>
-              <Box className="bg-gray-50 p-4 rounded">
-                <Text variant="small" color="muted">DESTINATAIRE</Text>
-                <Text className="font-bold">Jean Dupont</Text>
-                <Text>45 Rue du Commerce</Text>
-                <Text>69000 Lyon</Text>
-              </Box>
-              <Box className="bg-gray-50 p-4 rounded">
-                <Text variant="small" color="muted">DÉTAILS</Text>
-                <Text>Date: 19/07/2026</Text>
-                <Text>Échéance: 18/08/2026</Text>
-                <Badge variant="warning">En attente</Badge>
-              </Box>
-            </Grid>
-
-            <Table
-              columns={[
-                { key: 'description', label: 'Description', width: '50%' },
-                { key: 'quantity', label: 'Qté', align: 'center' },
-                { key: 'unitPrice', label: 'Prix unit.', align: 'right' },
-                { key: 'total', label: 'Total', align: 'right' },
-              ]}
-              data={items}
-              bordered
-              striped
-            />
-
-            <Flex justify="end">
-              <TotalBox
-                subtotal={subtotal}
-                discount={discount}
-                tax={tax}
-                total={total}
-              />
-            </Flex>
-
-            <Divider />
-
-            <Flex justify="between">
-              <Box>
-                <Text variant="small" color="muted">
-                  <strong>Conditions de paiement :</strong> 30 jours nets
-                </Text>
-                <Text variant="small" color="muted">
-                  <strong>IBAN :</strong> FR76 1234 5678 9012 3456 7890 123
-                </Text>
-              </Box>
-              <Flex gap={4}>
-                <QRCode value="https://example.com/invoice/123" size={80} />
-                <Barcode value="INV-2026-001" format="CODE128" height={60} />
-              </Flex>
-            </Flex>
-          </Box>
-        </Page>
-      </PDFGenerator>
-
-      {/* ===== BOUTON DE TÉLÉCHARGEMENT ===== */}
-      <div style={{ marginTop: '20px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <button
-          onClick={handleDownload}
-          disabled={loading}
-          style={{
-            padding: '12px 32px',
-            background: loading ? '#6b7280' : '#059669',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: loading ? 'default' : 'pointer',
-            transition: 'all 0.3s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-          onMouseEnter={(e) => {
-            if (!loading) e.currentTarget.style.background = '#047857';
-          }}
-          onMouseLeave={(e) => {
-            if (!loading) e.currentTarget.style.background = '#059669';
-          }}
-        >
-          {loading ? (
-            <>
-              <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⏳</span>
-              Génération en cours...
-            </>
-          ) : (
-            <>📥 Télécharger la facture</>
-          )}
-        </button>
-
-        {error && (
-          <span style={{ color: '#dc2626', fontSize: '14px' }}>
-            ❌ {error}
-          </span>
+      <button
+        onClick={() => download({
+          filename: `facture_${invoiceData.number}.pdf`,
+          format: 'a4',
+          orientation: 'portrait',
+          scale: 2,
+          quality: 0.9,
+        })}
+        disabled={loading}
+        style={{
+          padding: '12px 32px',
+          background: loading ? '#6b7280' : '#059669',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          cursor: loading ? 'default' : 'pointer',
+          transition: 'all 0.3s',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}
+      >
+        {loading ? (
+          <>
+            <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⏳</span>
+            Génération en cours...
+          </>
+        ) : (
+          <>📥 Télécharger la facture</>
         )}
-      </div>
+      </button>
 
       <style>{`
         @keyframes spin {
@@ -1131,13 +1106,7 @@ function CompleteInvoice() {
   );
 }
 
-export default function App() {
-  return (
-    <PDFProvider>
-      <CompleteInvoice />
-    </PDFProvider>
-  );
-}
+export default CompleteInvoice;
 ```
 
 ---
@@ -1155,9 +1124,30 @@ export default function App() {
 
 ### Recommandations
 
-- Utilisez `scale: 1.5` et `quality: 0.8` par défaut
-- Utilisez `scale: 2` et `quality: 0.9` pour l'impression
-- Utilisez `scale: 1` et `quality: 0.6` pour les aperçus rapides
+| Cas d'usage | `scale` | `quality` |
+|-------------|---------|-----------|
+| Aperçu rapide | 1 | 0.6 |
+| Usage général | 1.5 | 0.8 |
+| Impression | 2 | 0.95 |
+| Archivage | 2.5 | 0.95 |
+
+### Nettoyage de mémoire
+
+```tsx
+import { usePdf } from '@andy-defer/react-pdf-builder';
+import { useEffect } from 'react';
+
+function MyComponent() {
+  const { download, cleanup } = usePdf(<MyDocument />);
+
+  useEffect(() => {
+    // Nettoyage automatique à la destruction du composant
+    return () => cleanup();
+  }, [cleanup]);
+
+  // ...
+}
+```
 
 ---
 
@@ -1171,6 +1161,46 @@ export default function App() {
 | **Firefox** | 55+ |
 | **Safari** | 12+ |
 | **Edge** | 79+ |
+| **Node.js** | 18+ (pour les builds) |
+
+---
+
+## Migration depuis l'ancienne API
+
+### Avant (ancienne API)
+
+```tsx
+// ❌ Ancienne API avec PDFGenerator
+<PDFGenerator format="a4" border>
+  <Page>Contenu</Page>
+</PDFGenerator>
+
+// ❌ Ancien usePDF
+const { download, loading } = usePDF();
+await download(container, { filename: 'doc.pdf' });
+```
+
+### Après (nouvelle API)
+
+```tsx
+// ✅ Nouvelle API - Le composant PDFGenerator n'est plus nécessaire
+const { download, loading } = usePdf(
+  <Page>Contenu</Page>
+);
+
+// ✅ Téléchargement simplifié
+await download({ filename: 'doc.pdf' });
+```
+
+### Principaux changements
+
+| Ancienne API | Nouvelle API | Description |
+|--------------|--------------|-------------|
+| `PDFGenerator` | `usePdf()` | Plus besoin de wrapper, le hook gère le rendu |
+| `usePDF()` | `usePdf()` | Nom plus cohérent |
+| `download(container, options)` | `download(options)` | Le conteneur est géré automatiquement |
+| `generate(container, options)` | `generate(options)` | Génération simplifiée |
+| `preview(element, containerId)` | Non supporté | Utiliser `generate()` avec iframe |
 
 ---
 

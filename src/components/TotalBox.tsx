@@ -40,7 +40,7 @@ export function TotalBox({
                 {discount > 0 && (
                     <Flex direction="row" justify="between">
                         <Text variant="body" color="muted">Discount</Text>
-                        <Text variant="body" color="danger">-{discount.toFixed(2)} {currency}</Text>
+                        <Text variant="body" color="destructive">-{discount.toFixed(2)} {currency}</Text>
                     </Flex>
                 )}
 

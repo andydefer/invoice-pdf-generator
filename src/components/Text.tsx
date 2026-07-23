@@ -3,7 +3,7 @@ import { ReactNode, CSSProperties } from 'react';
 export interface TextProps {
     children: ReactNode;
     variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'body' | 'small';
-    color?: 'primary' | 'secondary' | 'muted' | 'danger' | 'success' | 'warning';
+    color?: 'primary' | 'secondary' | 'muted' | 'destructive' | 'success' | 'warning';
     align?: 'left' | 'center' | 'right' | 'justify';
     bold?: boolean;
     truncate?: boolean;
@@ -35,7 +35,7 @@ export function Text({
         primary: 'text-gray-900',
         secondary: 'text-gray-700',
         muted: 'text-gray-500',
-        danger: 'text-red-600',
+        destructive: 'text-red-600',
         success: 'text-green-600',
         warning: 'text-yellow-600',
     }[color];
