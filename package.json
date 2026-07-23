@@ -1,6 +1,6 @@
 {
     "name": "@andy-defer/react-pdf-builder",
-    "version": "1.1.3",
+    "version": "1.1.4",
     "description": "Build PDF documents with React and Tailwind CSS",
     "license": "MIT",
     "type": "module",
